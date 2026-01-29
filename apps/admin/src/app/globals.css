@@ -20,7 +20,8 @@
     --accent: 0.97 0 0;
     --accent-foreground: 0.205 0 0;
     --destructive: 0.577 0.245 27.325;
-    --destructive-foreground: 0.985 0 0; /* Added fallback */
+    --destructive-foreground: 0.985 0 0;
+    /* Added fallback */
     --border: 0.922 0 0;
     --input: 0.922 0 0;
     --ring: 0.708 0 0;
@@ -63,7 +64,19 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

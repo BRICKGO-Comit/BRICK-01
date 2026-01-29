@@ -112,18 +112,18 @@ export default function StatisticsPage() {
     };
 
     return (
-        <main className="flex-1 p-10 overflow-auto">
-            <header className="flex justify-between items-center mb-10">
+        <main className="p-6 lg:p-10">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 lg:mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#0F172A]">Statistiques</h1>
-                    <p className="text-[#64748B] mt-1 text-sm font-medium">Analysez les performances globales et l'efficacité de vos équipes.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Statistiques</h1>
+                    <p className="text-[#64748B] mt-1 text-sm font-medium">Analysez les performances de vos équipes.</p>
                 </div>
-                <div className="flex bg-white border border-[#E2E8F0] p-1 rounded-xl shadow-sm">
+                <div className="flex bg-white border border-[#E2E8F0] p-1.5 rounded-2xl shadow-sm self-start sm:self-auto">
                     {["Hebdo", "Mensuel", "Annuel"].map((t, i) => (
                         <button
                             key={i}
                             onClick={() => handleAction(`Vue ${t}`)}
-                            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${i === 1 ? "bg-indigo-50 text-[#4F46E5]" : "text-[#64748B] hover:text-[#0F172A]"
+                            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${i === 1 ? "bg-[#4F46E5]/10 text-[#4F46E5]" : "text-[#64748B] hover:text-[#0F172A]"
                                 }`}
                         >
                             {t}

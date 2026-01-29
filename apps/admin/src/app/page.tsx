@@ -102,15 +102,15 @@ export default function AdminDashboard() {
   };
 
   return (
-    <main className="flex-1 p-10 overflow-auto">
-      <header className="flex justify-between items-center mb-10">
+    <main className="p-6 lg:p-10">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 lg:mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-[#0F172A]">Tableau de bord</h1>
-          <p className="text-[#64748B] mt-1 text-sm font-medium">Bienvenue, voici l'activité de vos commerciaux aujourd'hui.</p>
+          <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Tableau de bord</h1>
+          <p className="text-[#64748B] mt-1 text-sm font-medium">Activité de vos commerciaux aujourd'hui.</p>
         </div>
         <button
           onClick={() => router.push('/users')}
-          className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center space-x-2 transition-all active:scale-95"
+          className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
         >
           <Plus size={20} />
           <span>Ajouter un commercial</span>

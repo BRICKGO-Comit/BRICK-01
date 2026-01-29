@@ -80,25 +80,25 @@ export default function SettingsPage() {
     ];
 
     return (
-        <main className="flex-1 p-10 overflow-auto bg-slate-50">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-[#0F172A]">Paramètres</h1>
-                <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez la configuration globale de votre plateforme.</p>
+        <main className="p-6 lg:p-10 bg-[#F8FAFC]">
+            <header className="mb-8 lg:mb-10 text-center lg:text-left">
+                <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Paramètres</h1>
+                <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez la plateforme globale.</p>
             </header>
 
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
                 {/* Sidebar Navigation */}
-                <div className="w-full lg:w-64 flex-shrink-0">
-                    <nav className="space-y-1">
+                <div className="w-full lg:w-72 flex-shrink-0">
+                    <nav className="flex lg:flex-col overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 space-x-3 lg:space-x-0 lg:space-y-2 scrollbar-hide">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 font-semibold text-sm ${activeTab === tab.id
-                                        ? "bg-white text-[#4F46E5] shadow-sm ring-1 ring-slate-200"
-                                        : "text-[#64748B] hover:bg-white/50 hover:text-[#1E293B]"
+                                    className={`flex-shrink-0 flex items-center space-x-3 px-5 py-3.5 lg:px-4 lg:py-3 rounded-2xl transition-all duration-200 font-bold text-sm whitespace-nowrap shadow-sm border ${activeTab === tab.id
+                                        ? "bg-[#4F46E5] text-white border-[#4F46E5] ring-4 ring-[#4F46E5]/10"
+                                        : "bg-white text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9] hover:text-[#1E293B]"
                                         }`}
                                 >
                                     <Icon size={18} />
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-[#E2E8F0] p-8 min-h-[600px]">
+                <div className="flex-1 w-full bg-white rounded-3xl shadow-sm border border-[#E2E8F0] p-6 lg:p-10 min-h-[600px]">
 
                     {/* GENERAL TAB */}
                     {activeTab === "general" && (

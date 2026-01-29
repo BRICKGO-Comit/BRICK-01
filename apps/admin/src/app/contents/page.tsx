@@ -201,13 +201,13 @@ export default function ContentsPage() {
     );
 
     return (
-        <main className="flex-1 p-10 overflow-auto relative">
-            <header className="flex justify-between items-center mb-10">
+        <main className="p-6 lg:p-10 relative">
+            <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8 lg:mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#0F172A]">Contenus</h1>
-                    <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez l'offre commerciale et les supports de vente diffusés sur l'app mobile.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Contenus</h1>
+                    <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez l'offre commerciale et les supports de vente.</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <button
                         onClick={() => {
                             setEditingId(null);
@@ -220,14 +220,14 @@ export default function ContentsPage() {
                             });
                             setIsVideoModalOpen(true);
                         }}
-                        className="bg-white border border-[#E2E8F0] text-[#0F172A] px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center space-x-2 transition-all hover:bg-slate-50"
+                        className="bg-white border border-[#E2E8F0] text-[#0F172A] px-5 py-3 lg:py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center space-x-2 transition-all hover:bg-slate-50 text-sm w-full sm:w-auto"
                     >
                         {activeTab === 'Formations' ? <GraduationCap size={18} /> : <Video size={18} />}
                         <span>{activeTab === 'Formations' ? 'Ajouter une Formation' : 'Ajouter une Vidéo'}</span>
                     </button>
                     <button
                         onClick={() => { resetForms(); setIsServiceModalOpen(true); }}
-                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center space-x-2 transition-all"
+                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-3 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all text-sm w-full sm:w-auto"
                     >
                         <Plus size={20} />
                         <span>Nouveau Service</span>
@@ -236,12 +236,12 @@ export default function ContentsPage() {
             </header>
 
             {/* Tabs / Filters Section */}
-            <div className="flex space-x-6 mb-8 border-b border-[#E2E8F0]">
+            <div className="flex overflow-x-auto space-x-4 mb-8 border-b border-[#E2E8F0] scrollbar-hide">
                 {["Tous les contenus", "Services", "Vidéos", "Formations"].map((tab, i) => (
                     <button
                         key={i}
                         onClick={() => setActiveTab(tab)}
-                        className={`pb-4 px-2 text-sm font-bold transition-all ${activeTab === tab ? "text-[#4F46E5] border-b-2 border-[#4F46E5]" : "text-[#64748B] hover:text-[#0F172A]"
+                        className={`pb-4 px-2 text-sm font-bold whitespace-nowrap transition-all ${activeTab === tab ? "text-[#4F46E5] border-b-2 border-[#4F46E5]" : "text-[#64748B] hover:text-[#0F172A]"
                             }`}
                     >
                         {tab}

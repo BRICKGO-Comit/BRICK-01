@@ -122,15 +122,15 @@ export default function UsersPage() {
     };
 
     return (
-        <main className="flex-1 p-10 overflow-auto relative">
-            <header className="flex justify-between items-center mb-10">
+        <main className="p-6 lg:p-10 relative">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 lg:mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#0F172A]">Commerciaux</h1>
-                    <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez vos commerciaux et leurs accès à l'application mobile.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Commerciaux</h1>
+                    <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez vos commerciaux et leurs accès.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center space-x-2 transition-all active:scale-95"
+                    className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
                 >
                     <Plus size={20} />
                     <span>Nouveau Commercial</span>

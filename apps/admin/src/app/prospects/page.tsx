@@ -119,23 +119,23 @@ export default function ProspectsPage() {
     };
 
     return (
-        <main className="flex-1 p-10 overflow-auto">
-            <header className="flex justify-between items-center mb-10">
+        <main className="p-6 lg:p-10">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 lg:mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#0F172A]">Prospects</h1>
-                    <p className="text-[#64748B] mt-1 text-sm font-medium">Suivez et gérez tous les leads générés par vos équipes terrain.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Prospects</h1>
+                    <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez et suivez vos leads générés sur le terrain.</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <button
                         onClick={() => handleAction("Exporter CSV")}
-                        className="bg-white border border-[#E2E8F0] text-[#0F172A] px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center space-x-2 transition-all hover:bg-slate-50"
+                        className="bg-white border border-[#E2E8F0] text-[#0F172A] px-5 py-3 lg:py-2.5 rounded-xl font-bold shadow-sm flex items-center justify-center space-x-2 transition-all hover:bg-slate-50 text-sm w-full sm:w-auto"
                     >
                         <Download size={18} />
                         <span>Exporter CSV</span>
                     </button>
                     <button
                         onClick={() => document.querySelector('select')?.focus()}
-                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center space-x-2 transition-all"
+                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-3 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all text-sm w-full sm:w-auto"
                     >
                         <Filter size={18} />
                         <span>Filtrer</span>
@@ -144,21 +144,21 @@ export default function ProspectsPage() {
             </header>
 
             {/* Filters Summary */}
-            <div className="flex items-center space-x-4 mb-8">
-                <div className="bg-indigo-50 text-[#4F46E5] px-4 py-2 rounded-xl border border-indigo-100 flex items-center space-x-2">
-                    <Search size={16} />
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-8">
+                <div className="bg-white text-[#4F46E5] px-4 py-3 rounded-2xl border border-[#E2E8F0] shadow-sm flex items-center space-x-3 flex-1">
+                    <Search size={18} className="text-[#94A3B8]" />
                     <input
                         type="text"
                         placeholder="Rechercher un prospect ou une société..."
-                        className="bg-transparent border-none text-sm font-semibold focus:ring-0 w-80 placeholder:text-indigo-300"
+                        className="bg-transparent border-none text-sm font-bold focus:ring-0 w-full placeholder:text-[#94A3B8]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center min-w-[200px]">
                     <select
-                        className="bg-white border border-[#E2E8F0] px-4 py-2 rounded-xl text-sm font-bold text-[#64748B] focus:ring-0 outline-none cursor-pointer hover:bg-slate-50 transition-colors appearance-none pr-8"
-                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748B\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                        className="w-full bg-white border border-[#E2E8F0] px-4 py-3 rounded-2xl text-sm font-bold text-[#64748B] shadow-sm focus:ring-0 outline-none cursor-pointer hover:bg-slate-50 transition-colors appearance-none pr-10"
+                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748B\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >

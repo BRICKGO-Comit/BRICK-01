@@ -9,9 +9,12 @@ import {
     Image,
     Dimensions,
     FlatList,
-    Platform
+    Platform,
+    Linking,
+    Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ArrowLeft, Play, Filter, PlayCircle, Loader2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../lib/supabase';
@@ -27,6 +30,32 @@ export default function VideosScreen() {
     useEffect(() => {
         fetchVideos();
     }, []);
+
+    const handlePlayVideo = async (url: string) => {
+        if (!url) {
+            Alert.alert('Erreur', 'Aucun lien disponible pour cette vidéo.');
+            return;
+        }
+
+        try {
+            // First try with Linking (might open YouTube/Drive app)
+            const supported = await Linking.canOpenURL(url);
+            if (supported) {
+                await Linking.openURL(url);
+            } else {
+                // If not "supported" by a specific app, try opening in the browser
+                await WebBrowser.openBrowserAsync(url);
+            }
+        } catch (error) {
+            console.error('Error opening URL:', error);
+            // Fallback to WebBrowser if Linking throws
+            try {
+                await WebBrowser.openBrowserAsync(url);
+            } catch (innerError) {
+                Alert.alert('Erreur', "Impossible d'ouvrir la vidéo.");
+            }
+        }
+    };
 
     const fetchVideos = async () => {
         try {
@@ -92,7 +121,11 @@ export default function VideosScreen() {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.videoCard} activeOpacity={0.9}>
+                        <TouchableOpacity
+                            style={styles.videoCard}
+                            activeOpacity={0.9}
+                            onPress={() => handlePlayVideo(item.url)}
+                        >
                             <View style={styles.thumbContainer}>
                                 <Image
                                     source={{ uri: item.thumbnail_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=400' }}

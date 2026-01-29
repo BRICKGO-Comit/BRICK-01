@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import {
     TrendingUp,
     TrendingDown,
@@ -8,21 +10,101 @@ import {
     BarChart3,
     Calendar,
     ChevronRight,
-    ArrowUpRight
+    ArrowUpRight,
+    Loader2
 } from "lucide-react";
 
 export default function StatisticsPage() {
-    const kpis = [
-        { label: "Croissance Mensuelle", value: "+24%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", detail: "vs mois dernier" },
-        { label: "Nouveaux Prospects", value: "156", icon: Users, color: "text-blue-600", bg: "bg-blue-50", detail: "cette semaine" },
-        { label: "Objectif Trimestriel", value: "68%", icon: Target, color: "text-purple-600", bg: "bg-purple-50", detail: "400k / 600k €" },
-        { label: "Délai de Conversion", value: "8.4j", icon: BarChart3, color: "text-orange-600", bg: "bg-orange-50", detail: "-1.2j depuis sept" },
-    ];
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({
+        totalProspects: 0,
+        newProspectsWeek: 0,
+        totalRevenue: 0,
+        conversionRate: 0,
+        dailyLeads: [] as number[],
+        topPerformers: [] as any[]
+    });
 
-    const topSales = [
-        { name: "Jean Martin", sales: "€45,600", leads: 42, conversion: "32%" },
-        { name: "Sophie Bernard", sales: "€38,200", leads: 56, conversion: "28%" },
-        { name: "Marc Durand", sales: "€22,400", leads: 31, conversion: "24%" },
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const fetchStats = async () => {
+        setLoading(true);
+        try {
+            // 1. Fetch Prospects
+            const { data: prospects } = await supabase
+                .from('prospects')
+                .select('*');
+
+            if (!prospects) return;
+
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const newProspects = prospects.filter(p => new Date(p.created_at) > oneWeekAgo).length;
+            const totalRev = prospects
+                .filter(p => p.status === 'qualifié')
+                .reduce((acc, p) => acc + (Number(p.deal_value) || 0), 0);
+
+            // 2. Chart Data (Last 10 days)
+            const dailyCounts = new Array(10).fill(0);
+            const daysArr = [];
+            for (let i = 9; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dayStr = d.toISOString().split('T')[0];
+                daysArr.push(d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }));
+                dailyCounts[9 - i] = prospects.filter(p => p.created_at.startsWith(dayStr)).length;
+            }
+
+            // 3. Top Performers
+            const { data: performers } = await supabase
+                .from('prospects')
+                .select('deal_value, status, profiles(first_name, last_name)')
+                .not('assigned_to', 'is', null);
+
+            const perfMap: any = {};
+            performers?.forEach((p: any) => {
+                const name = `${p.profiles?.first_name || 'Inconnu'} ${p.profiles?.last_name || ''}`.trim();
+                if (!perfMap[name]) perfMap[name] = { name, sales: 0, leads: 0, won: 0 };
+                perfMap[name].leads++;
+                if (p.status === 'qualifié') {
+                    perfMap[name].sales += Number(p.deal_value) || 0;
+                    perfMap[name].won++;
+                }
+            });
+
+            const topPerformers = Object.values(perfMap)
+                .sort((a: any, b: any) => b.sales - a.sales)
+                .slice(0, 3)
+                .map((p: any) => ({
+                    ...p,
+                    conversion: p.leads > 0 ? Math.round((p.won / p.leads) * 100) + '%' : '0%',
+                    sales: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(p.sales)
+                }));
+
+            setStats({
+                totalProspects: prospects.length,
+                newProspectsWeek: newProspects,
+                totalRevenue: totalRev,
+                conversionRate: prospects.length > 0 ? Math.round((prospects.filter(p => p.status === 'qualifié').length / prospects.length) * 100) : 0,
+                dailyLeads: dailyCounts,
+                topPerformers
+            });
+
+        } catch (err) {
+            console.error("Error fetching stats:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const kpis = [
+        { label: "Total Prospects", value: stats.totalProspects, icon: Users, color: "text-blue-600", bg: "bg-blue-50", detail: "depuis le début" },
+        { label: "Nouveaux Prospects", value: stats.newProspectsWeek, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50", detail: "derniers 7 jours" },
+        { label: "Objectif Trimestriel", value: Math.min(100, Math.round((stats.totalRevenue / 600000) * 100)) + '%', icon: Target, color: "text-purple-600", bg: "bg-purple-50", detail: `${(stats.totalRevenue / 1000).toFixed(1)}k / 600k €` },
+        { label: "Taux de Conversion", value: stats.conversionRate + '%', icon: BarChart3, color: "text-orange-600", bg: "bg-orange-50", detail: "Statut 'Qualifié'" },
     ];
 
     const handleAction = (action: string) => {
@@ -86,14 +168,18 @@ export default function StatisticsPage() {
                             <span>Octobre 2024</span>
                         </button>
                     </div>
-                    <div className="flex items-end justify-between h-64 px-4 border-b border-[#F1F5F9]">
-                        {/* Simple CSS bars for visualization */}
-                        {[45, 78, 56, 92, 44, 67, 88, 52, 71, 95].map((h, i) => (
+                    <div className="flex items-end justify-between h-64 px-4 border-b border-[#F1F5F9] relative">
+                        {loading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                                <Loader2 className="animate-spin text-indigo-600" />
+                            </div>
+                        )}
+                        {/* Bars for visualization */}
+                        {stats.dailyLeads.map((h, i) => (
                             <div
                                 key={i}
-                                onClick={() => handleAction(`Détail Jour ${i + 1}`)}
                                 className="w-8 bg-[#4F46E5] rounded-t-lg transition-all hover:bg-[#4338CA] relative group cursor-pointer"
-                                style={{ height: `${h}%` }}
+                                style={{ height: `${Math.max(5, (h / (Math.max(...stats.dailyLeads, 1))) * 100)}%` }}
                             >
                                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0F172A] text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                     {h} leads
@@ -102,20 +188,30 @@ export default function StatisticsPage() {
                         ))}
                     </div>
                     <div className="flex justify-between mt-4 px-1">
-                        {["01", "04", "07", "10", "13", "16", "19", "22", "25", "28"].map((d, i) => (
-                            <span key={i} className="text-[10px] font-bold text-[#94A3B8]">{d} Oct</span>
-                        ))}
+                        {Array.from({ length: 10 }).map((_, i) => {
+                            const d = new Date();
+                            d.setDate(d.getDate() - (9 - i));
+                            return (
+                                <span key={i} className="text-[10px] font-bold text-[#94A3B8]">
+                                    {d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Top Performers */}
                 <div className="bg-white border border-[#E2E8F0] rounded-2xl p-8 shadow-sm">
                     <h2 className="text-xl font-bold text-[#0F172A] mb-8">Top Commerciaux</h2>
-                    <div className="space-y-6">
-                        {topSales.map((sales, i) => (
+                    <div className="space-y-6 relative min-h-[200px]">
+                        {loading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                                <Loader2 className="animate-spin text-indigo-600" />
+                            </div>
+                        )}
+                        {stats.topPerformers.map((sales, i) => (
                             <div
                                 key={i}
-                                onClick={() => handleAction(`Performance de ${sales.name}`)}
                                 className="flex items-center justify-between p-4 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] hover:border-[#4F46E5]/40 transition-all cursor-pointer group"
                             >
                                 <div className="flex items-center space-x-4">
@@ -131,11 +227,11 @@ export default function StatisticsPage() {
                                     <div className="font-black text-indigo-600">{sales.sales}</div>
                                     <div className="text-[10px] text-[#94A3B8] font-bold">Conv. {sales.conversion}</div>
                                 </div>
-                                <div className="pl-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4F46E5]">
-                                    <ChevronRight size={18} />
-                                </div>
                             </div>
                         ))}
+                        {!loading && stats.topPerformers.length === 0 && (
+                            <p className="text-center py-10 text-[#64748B] text-sm font-medium">Aucun commercial n'a encore enregistré de ventes.</p>
+                        )}
                     </div>
                     <button
                         onClick={() => handleAction("Classement Complet")}

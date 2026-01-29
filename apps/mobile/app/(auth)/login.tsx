@@ -16,7 +16,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 const { width, height } = Dimensions.get('window');
@@ -126,7 +127,7 @@ export default function LoginScreen() {
                         <Text style={styles.welcomeText}>Connectez-vous à votre espace</Text>
 
                         <BlurView intensity={20} tint="light" style={styles.inputWrapper}>
-                            <Mail color="#64748B" size={20} style={styles.inputIcon} />
+                            <Ionicons name="mail-outline" color="#64748B" size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
                                 placeholder="gobrick638@gmail.com"
@@ -139,7 +140,7 @@ export default function LoginScreen() {
                         </BlurView>
 
                         <BlurView intensity={20} tint="light" style={styles.inputWrapper}>
-                            <Lock color="#64748B" size={20} style={styles.inputIcon} />
+                            <Ionicons name="lock-closed-outline" color="#64748B" size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
                                 placeholder="Mot de passe"
@@ -152,7 +153,11 @@ export default function LoginScreen() {
                                 onPress={() => setShowPassword(!showPassword)}
                                 style={styles.eyeIcon}
                             >
-                                {showPassword ? <EyeOff color="#64748B" size={20} /> : <Eye color="#64748B" size={20} />}
+                                <Ionicons
+                                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                    color="#64748B"
+                                    size={20}
+                                />
                             </TouchableOpacity>
                         </BlurView>
 
@@ -168,7 +173,7 @@ export default function LoginScreen() {
                                 style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
                             >
                                 {loading ? (
-                                    <Loader2 color="#FFFFFF" size={24} style={styles.loadingIcon} />
+                                    <ActivityIndicator color="#FFFFFF" size="small" />
                                 ) : (
                                     <Text style={styles.loginBtnText}>Se Connecter</Text>
                                 )}

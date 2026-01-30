@@ -55,17 +55,7 @@ export default function AppSplashScreen() {
     return (
         <View style={styles.container}>
             {/* Beige Background */}
-            <LinearGradient
-                colors={['#FAF9F6', '#F2F0E6', '#E6E2D6']}
-                start={{ x: 0.2, y: 0.1 }}
-                end={{ x: 0.8, y: 0.9 }}
-                style={styles.background}
-            />
-
-            {/* Geometric Shapes Background - Dark on Beige */}
-            <Animated.View style={[styles.shape, styles.shape1, animatedShape1]} />
-            <Animated.View style={[styles.shape, styles.shape2, animatedShape2]} />
-            <View style={[styles.shape, styles.shape3]} />
+            <View style={styles.background} />
 
             {/* Content */}
             <View style={styles.contentContainer}>
@@ -73,10 +63,6 @@ export default function AppSplashScreen() {
                     <Text style={styles.logoText}>BRICK</Text>
                     <Text style={[styles.logoText, styles.logoHighlight]}>GO</Text>
                 </Animated.View>
-
-                <View style={styles.footer}>
-                    <View style={styles.indicator} />
-                </View>
             </View>
         </View>
     );
@@ -85,16 +71,13 @@ export default function AppSplashScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F0E6',
+        backgroundColor: '#F5F5DC', // Beige couleur
         justifyContent: 'center',
         alignItems: 'center',
     },
     background: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#F5F5DC',
     },
     contentContainer: {
         flex: 1,
@@ -107,51 +90,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logoText: {
-        fontSize: 42,
+        fontSize: 48,
         fontWeight: '900',
-        color: '#000000', // Black text
-        letterSpacing: 1,
+        color: '#000000',
+        letterSpacing: 2,
+        fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-medium',
+        textTransform: 'uppercase',
     },
     logoHighlight: {
-        marginLeft: 8,
+        marginLeft: 12,
         color: '#000000',
-        // Optional: add a border or different weight if needed, but BW contrast is enough
     },
-    // Abstract Shapes
-    shape: {
-        position: 'absolute',
-        borderRadius: 40,
-        opacity: 0.03, // Very subtle dark shapes
-    },
-    shape1: {
-        width: 300,
-        height: 300,
-        backgroundColor: '#000000',
-        top: -50,
-        right: -100,
-        transform: [{ rotate: '45deg' }],
-    },
-    shape2: {
-        width: 200,
-        height: 200,
-        backgroundColor: '#000000',
-        bottom: 100,
-        left: -50,
-        borderRadius: 100,
-    },
-    shape3: {
-        width: width * 0.8,
-        height: 1,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-        bottom: height * 0.3,
-        left: width * 0.1,
-    },
-    footer: {
-        position: 'absolute',
-        bottom: 50,
-        alignItems: 'center',
-    },
-    indicator: {
-        // Simple loading or decorative line
-    }
 });

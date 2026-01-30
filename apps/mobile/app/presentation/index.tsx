@@ -22,7 +22,13 @@ export default function PresentationScreen() {
     return (
         <View style={styles.container}>
             {/* Fixed Background */}
-            <View style={[styles.fixedBackground, { backgroundColor: '#11181C' }]} />
+            {/* Fixed Background with Geometric Pattern */}
+            <View style={[styles.fixedBackground, { backgroundColor: '#0F172A', overflow: 'hidden' }]}>
+                {/* Decorative Circles/Shapes */}
+                <View style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: '#4F46E5', opacity: 0.15 }} />
+                <View style={{ position: 'absolute', top: 100, left: -60, width: 300, height: 300, borderRadius: 150, backgroundColor: '#EC4899', opacity: 0.1 }} />
+                <View style={{ position: 'absolute', bottom: 200, right: -20, width: 150, height: 150, borderRadius: 75, backgroundColor: '#10B981', opacity: 0.1 }} />
+            </View>
             <LinearGradient
                 colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
                 style={styles.fixedOverlay}
@@ -249,7 +255,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     headerSpacer: {
-        height: 220,
+        height: 120,
     },
     heroTextContainer: {
         paddingHorizontal: 24,

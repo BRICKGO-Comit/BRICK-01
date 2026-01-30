@@ -22,10 +22,7 @@ export default function PresentationScreen() {
     return (
         <View style={styles.container}>
             {/* Fixed Background */}
-            <Image
-                source={require('../../assets/images/bg_presentation.png')}
-                style={styles.fixedBackground}
-            />
+            <View style={[styles.fixedBackground, { backgroundColor: '#11181C' }]} />
             <LinearGradient
                 colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
                 style={styles.fixedOverlay}

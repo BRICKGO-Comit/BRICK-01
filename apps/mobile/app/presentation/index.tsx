@@ -23,7 +23,7 @@ export default function PresentationScreen() {
         <View style={styles.container}>
             {/* Fixed Background */}
             <Image
-                source={require('../../assets/images/presentation_bg.png')}
+                source={require('../../assets/images/bg_presentation.png')}
                 style={styles.fixedBackground}
             />
             <LinearGradient

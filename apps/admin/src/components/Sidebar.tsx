@@ -10,8 +10,7 @@ import {
     TrendingUp,
     Settings,
     LogOut,
-    X,
-    MapPin
+    X
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,7 +23,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const menuItems = [
         { icon: LayoutDashboard, label: "Tableau de bord", href: "/" },
-        { icon: MapPin, label: "Carte Terrain", href: "/map" },
         { icon: Users, label: "Commerciaux", href: "/users" },
         { icon: FileText, label: "Contenus", href: "/contents" },
         { icon: Briefcase, label: "Prospects", href: "/prospects" },

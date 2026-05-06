@@ -21,6 +21,7 @@ export default function AdminDashboard() {
     { label: "COMMERCIAUX ACTIFS", value: "0", growth: "+0", icon: Briefcase, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "TAUX CONVERSION", value: "0%", growth: "+0%", icon: LayoutDashboard, color: "text-orange-600", bg: "bg-orange-50" },
   ]);
+  const [department, setDepartment] = useState('all');
   const [recentProspects, setRecentProspects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +57,7 @@ export default function AdminDashboard() {
       supabase.removeChannel(prospectsChannel);
       supabase.removeChannel(profilesChannel);
     };
-  }, []);
+  }, [department]); // Re-fetch when department changes
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -65,29 +66,42 @@ export default function AdminDashboard() {
       const { data: settingsData } = await supabase.from('app_settings').select('currency_symbol').limit(1).maybeSingle();
       const currencySymbol = settingsData?.currency_symbol || 'FCFA'; // Default to FCFA if not found, or maybe empty string
 
+      let prospectsQuery = supabase.from('prospects').select('id, status, deal_value, department, commission_amount');
+      if (department !== 'all') {
+        prospectsQuery = prospectsQuery.eq('department', department);
+      }
+
+      let recentQuery = supabase.from('prospects').select('*, assigned_profile:profiles(first_name, last_name)').order('created_at', { ascending: false }).limit(5);
+      if (department !== 'all') {
+        recentQuery = recentQuery.eq('department', department);
+      }
+
       const [prospectsRes, profilesRes, recentRes] = await Promise.all([
-        supabase.from('prospects').select('id, status, deal_value'),
+        prospectsQuery,
         supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', 'blocked'),
-        supabase.from('prospects').select('*, assigned_profile:profiles(first_name, last_name)').order('created_at', { ascending: false }).limit(5)
+        recentQuery
       ]);
 
       const allProspects = prospectsRes.data || [];
       const totalProspects = allProspects.length;
       const activeReps = profilesRes.count || 0;
 
-      // Calculate Revenue
+      // Calculate Revenue / Commissions
       const wonProspects = allProspects.filter(p => p.status === 'converted' || p.status === 'won' || p.status === 'gagné' || p.status === 'qualifié');
       const revenue = wonProspects.reduce((acc, curr) => acc + (curr.deal_value || 0), 0);
+      const commissions = allProspects.reduce((acc, curr) => acc + (curr.commission_amount || 0), 0);
 
       // Calculate Conversion Rate
       const conversionRate = totalProspects > 0 ? ((wonProspects.length / totalProspects) * 100).toFixed(1) : 0;
 
-      setStats([
+      const newStats = [
         { label: "TOTAL PROSPECTS", value: totalProspects.toLocaleString(), growth: "+0%", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: "REVENU", value: `${revenue.toLocaleString()} ${currencySymbol}`, growth: "+0%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+        { label: department === 'brick_food' ? "COMMISSIONS" : "REVENU", value: `${(department === 'brick_food' ? commissions : revenue).toLocaleString()} ${currencySymbol}`, growth: "+0%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
         { label: "COMMERCIAUX ACTIFS", value: activeReps.toString(), growth: "+0", icon: Briefcase, color: "text-purple-600", bg: "bg-purple-50" },
         { label: "TAUX CONVERSION", value: `${conversionRate}%`, growth: "+0%", icon: LayoutDashboard, color: "text-orange-600", bg: "bg-orange-50" },
-      ]);
+      ];
+
+      setStats(newStats);
 
       setRecentProspects(recentRes.data || []);
     } catch (err) {
@@ -108,13 +122,24 @@ export default function AdminDashboard() {
           <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Tableau de bord</h1>
           <p className="text-[#64748B] mt-1 text-sm font-medium">Activité de vos commerciaux aujourd'hui.</p>
         </div>
-        <button
-          onClick={() => router.push('/users')}
-          className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
-        >
-          <Plus size={20} />
-          <span>Ajouter un commercial</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <select 
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="bg-white border border-[#E2E8F0] px-4 py-2.5 rounded-xl font-bold text-sm text-[#0F172A] shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"
+          >
+            <option value="all">Tous les départements</option>
+            <option value="brick_core">Brick Core</option>
+            <option value="brick_food">Brick Food 🍔</option>
+          </select>
+          <button
+            onClick={() => router.push('/users')}
+            className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
+          >
+            <Plus size={20} />
+            <span>Ajouter un commercial</span>
+          </button>
+        </div>
       </header>
 
       {/* Stats Grid */}

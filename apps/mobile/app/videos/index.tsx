@@ -15,8 +15,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ArrowLeft, Play, Filter, PlayCircle, Loader2 } from 'lucide-react-native';
+import { ArrowLeft, Play, Filter, PlayCircle, Loader2, Copy, Share2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Clipboard from 'expo-clipboard';
+import { Share } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
@@ -54,6 +56,25 @@ export default function VideosScreen() {
             } catch (innerError) {
                 Alert.alert('Erreur', "Impossible d'ouvrir la vidéo.");
             }
+        }
+    };
+
+    const handleCopy = async (video: any) => {
+        const text = `Regardez cette vidéo de BRICK GO: ${video.title}\n\nLien: ${video.url}`;
+        await Clipboard.setStringAsync(text);
+        if (Platform.OS === 'android') {
+            Alert.alert('Copié !', 'Le lien de la vidéo est dans votre presse-papier.');
+        }
+    };
+
+    const handleShare = async (video: any) => {
+        const text = `Découvrez notre solution en vidéo: ${video.title}\n\n${video.url}`;
+        try {
+            await Share.share({
+                message: text,
+            });
+        } catch (error: any) {
+            Alert.alert('Erreur', error.message);
         }
     };
 
@@ -143,8 +164,18 @@ export default function VideosScreen() {
                                 )}
                             </View>
                             <View style={styles.videoInfo}>
-                                <View style={styles.categoryBadge}>
-                                    <Text style={styles.categoryBadgeText}>{item.category || 'Corporate'}</Text>
+                                <View style={styles.videoHeader}>
+                                    <View style={styles.categoryBadge}>
+                                        <Text style={styles.categoryBadgeText}>{item.category || 'Corporate'}</Text>
+                                    </View>
+                                    <View style={styles.actionRow}>
+                                        <TouchableOpacity onPress={() => handleCopy(item)} style={styles.iconBtn}>
+                                            <Copy color="#9BA1A6" size={18} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => handleShare(item)} style={styles.iconBtn}>
+                                            <Share2 color="#9BA1A6" size={18} />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                                 <Text style={styles.videoTitle}>{item.title}</Text>
                             </View>
@@ -282,6 +313,19 @@ const styles = StyleSheet.create({
         color: '#11181C',
         fontSize: 16,
         fontWeight: '700',
+    },
+    videoHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    actionRow: {
+        flexDirection: 'row',
+        gap: 15,
+    },
+    iconBtn: {
+        padding: 4,
     },
     loadingContainer: {
         flex: 1,

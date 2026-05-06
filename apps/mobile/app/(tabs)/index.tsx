@@ -22,7 +22,11 @@ import {
   ChevronRight,
   Info,
   Bell,
-  Wallet
+  Wallet,
+  Users,
+  MapPin,
+  TrendingUp,
+  Map as MapIcon
 } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { Colors } from '../../constants/Colors';
@@ -34,18 +38,45 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState({
     prospects: 0,
     objective: 0,
-    sales: 0
+    sales: 0,
+    commission: 0,
+    inscriptions: 0
   });
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const isFood = userData?.profile?.department === 'brick_food';
+
   // Grouped Menu Items for better UX
   const mainActions = [
-    { id: 'prospect', title: 'Nouveau Client', subtitle: 'Enregistrer une visite', icon: UserPlus, color: '#FFFFFF', bg: '#000000', route: '/prospect/new', width: '100%' },
+    { 
+      id: 'prospect', 
+      title: isFood ? 'Inscrire Établissement' : 'Nouveau Client', 
+      subtitle: isFood ? 'Brick Food Terrain' : 'Enregistrer une visite', 
+      icon: UserPlus, 
+      color: '#FFFFFF', 
+      bg: '#000000', 
+      route: isFood ? '/prospect/food_new' : '/prospect/new', 
+      width: '100%' 
+    },
   ];
+
+  if (isFood) {
+    mainActions.push({
+      id: 'map',
+      title: 'Carte Terrain',
+      subtitle: 'Voir les enregistrements',
+      icon: MapPin,
+      color: '#FFFFFF',
+      bg: '#4F46E5',
+      route: '/map',
+      width: '100%'
+    });
+  }
 
   const resources = [
     { id: 'services', title: 'Services', icon: Briefcase, color: '#4F46E5', bg: '#EEF2FF', route: '/(tabs)/services' },
+    { id: 'prospects', title: 'Mes Prospects', icon: Users, color: '#10B981', bg: '#ECFDF5', route: '/prospects' },
     { id: 'videos', title: 'Vidéos', icon: PlayCircle, color: '#F59E0B', bg: '#FEF3C7', route: '/videos' },
     { id: 'formations', title: 'Formations', icon: GraduationCap, color: '#EC4899', bg: '#FCE7F3', route: '/formations' },
     { id: 'presentation', title: 'Présenter', icon: Info, color: '#06B6D4', bg: '#ECFEFF', route: '/presentation' },
@@ -70,10 +101,10 @@ export default function DashboardScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch profile to get real first name
+      // Fetch profile with department and objectives
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name')
+        .select('*')
         .eq('id', user.id)
         .single();
 
@@ -86,14 +117,20 @@ export default function DashboardScreen() {
 
       if (error) throw error;
 
-      const salesCount = data?.filter((p: any) => p.status === 'Qualifié').length || 0;
-      // Objective logic: 10 sales per month
-      const objPercent = Math.min(Math.round((salesCount / 10) * 100), 100);
+      const salesCount = data?.filter((p: any) => p.status === 'converted' || p.status === 'Qualifié').length || 0;
+      const inscriptionCount = data?.filter((p: any) => p.status !== 'new' && p.status !== 'refused' && p.status !== 'lost').length || 0;
+      const totalCommission = data?.reduce((acc: number, p: any) => acc + (p.commission_amount || 0), 0) || 0;
+      
+      // Objective logic
+      const target = profile?.monthly_inscriptions_goal || 10;
+      const objPercent = Math.min(Math.round((inscriptionCount / target) * 100), 100);
 
       setStats({
         prospects: count || 0,
         objective: objPercent,
-        sales: salesCount
+        sales: salesCount,
+        commission: totalCommission,
+        inscriptions: inscriptionCount
       });
     } catch (err) {
       console.error('Stats error:', err);
@@ -128,7 +165,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Stats Summary Card */}
-        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/(tabs)/activity')}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/prospects' as any)}>
           <LinearGradient
             colors={['#4F46E5', '#312E81']} // Deep indigo gradient
             start={{ x: 0, y: 0 }}
@@ -152,15 +189,33 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statBlock}>
-                <Text style={styles.statNumber}>{stats.sales}</Text>
-                <Text style={styles.statLabel}>Ventes</Text>
+                <Text style={styles.statNumber}>{isFood ? stats.inscriptions : stats.sales}</Text>
+                <Text style={styles.statLabel}>{isFood ? 'Inscrits' : 'Ventes'}</Text>
               </View>
+              {isFood && (
+                <>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBlock}>
+                    <Text style={styles.statNumber}>{stats.sales}</Text>
+                    <Text style={styles.statLabel}>Abos</Text>
+                  </View>
+                </>
+              )}
               <View style={styles.statDivider} />
               <View style={styles.statBlock}>
                 <Text style={[styles.statNumber, { color: '#34D399' }]}>{stats.objective}%</Text>
                 <Text style={styles.statLabel}>Objectif</Text>
               </View>
             </View>
+
+            {isFood && stats.commission > 0 && (
+              <View style={styles.commissionBadge}>
+                <TrendingUp color="#34D399" size={14} />
+                <Text style={styles.commissionText}>
+                  {stats.commission.toLocaleString()} FCFA gagnés
+                </Text>
+              </View>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 
@@ -291,6 +346,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 24,
     elevation: 8,
+  },
+  commissionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 20,
+    gap: 8,
+  },
+  commissionText: {
+    color: '#34D399',
+    fontSize: 14,
+    fontWeight: '700',
   },
   heroHeader: {
     flexDirection: 'row',

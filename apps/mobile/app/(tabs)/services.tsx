@@ -19,8 +19,12 @@ import {
     ArrowUpRight,
     X,
     Briefcase,
-    Zap
+    Zap,
+    Copy,
+    Share2
 } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Share, Alert } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 export default function ServicesScreen() {
@@ -76,6 +80,25 @@ export default function ServicesScreen() {
         setRefreshing(true);
         fetchServices();
     }, []);
+
+    const handleCopy = async (service: any) => {
+        const text = `*${service.title}*\n\n${service.description}\n\n💰 Prix: ${service.price ? service.price + " " + currency : 'Sur devis'}\n\nPropulsé par BRICK GO`;
+        await Clipboard.setStringAsync(text);
+        if (Platform.OS === 'android') {
+            Alert.alert('Copié !', 'Le texte est dans votre presse-papier.');
+        }
+    };
+
+    const handleShare = async (service: any) => {
+        const text = `*${service.title}*\n\n${service.description}\n\n💰 Prix: ${service.price ? service.price + " " + currency : 'Sur devis'}\n\nEnvoyé via BRICK GO`;
+        try {
+            await Share.share({
+                message: text,
+            });
+        } catch (error: any) {
+            Alert.alert('Erreur', error.message);
+        }
+    };
 
     // Filter effect
     useEffect(() => {
@@ -217,8 +240,28 @@ export default function ServicesScreen() {
                                         <Text style={styles.badgeText}>{item.category || 'Service'}</Text>
                                     </View>
                                     <View style={styles.actionRow}>
-                                        <Text style={styles.actionText}>Sélectionner</Text>
-                                        <ArrowUpRight color="#4F46E5" size={16} />
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            onPress={(e) => {
+                                                e.stopPropagation();
+                                                handleCopy(item);
+                                            }}
+                                        >
+                                            <Copy color="#64748B" size={18} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.actionIconBtn}
+                                            onPress={(e) => {
+                                                e.stopPropagation();
+                                                handleShare(item);
+                                            }}
+                                        >
+                                            <Share2 color="#64748B" size={18} />
+                                        </TouchableOpacity>
+                                        <View style={styles.selectBtn}>
+                                            <Text style={styles.actionText}>Détails</Text>
+                                            <ArrowUpRight color="#4F46E5" size={16} />
+                                        </View>
                                     </View>
                                 </View>
                             </View>
@@ -401,7 +444,21 @@ const styles = StyleSheet.create({
     actionRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 12,
+    },
+    actionIconBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: '#F1F5F9',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    selectBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 4,
+        paddingLeft: 4,
     },
     actionText: {
         fontSize: 14,

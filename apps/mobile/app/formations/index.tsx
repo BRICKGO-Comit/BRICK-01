@@ -11,8 +11,10 @@ import {
     Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, GraduationCap, Clock, Euro, CheckCircle, ChevronRight, Loader2 } from 'lucide-react-native';
+import { ArrowLeft, GraduationCap, Clock, Euro, CheckCircle, ChevronRight, Loader2, Copy, Share2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Clipboard from 'expo-clipboard';
+import { Share, Alert } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
@@ -52,6 +54,25 @@ export default function FormationsScreen() {
             console.error('Error fetching formations:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCopy = async (formation: any) => {
+        const text = `*Formation Academy BRICK*\n\n*${formation.title}*\n\n${formation.description}\n\n🎓 Durée: ${formation.duration || 'Flexible'}\n💰 Investissement: ${formation.price ? formation.price + "€" : 'Gratuit'}\n\nInscrivez-vous via BRICK GO`;
+        await Clipboard.setStringAsync(text);
+        if (Platform.OS === 'android') {
+            Alert.alert('Copié !', 'Le texte est dans votre presse-papier.');
+        }
+    };
+
+    const handleShare = async (formation: any) => {
+        const text = `*Academy BRICK: ${formation.title}*\n\n${formation.description}\n\n🎓 ${formation.duration || 'Flexible'} | 💰 ${formation.price ? formation.price + "€" : 'Gratuit'}`;
+        try {
+            await Share.share({
+                message: text,
+            });
+        } catch (error: any) {
+            Alert.alert('Erreur', error.message);
         }
     };
 
@@ -108,13 +129,22 @@ export default function FormationsScreen() {
                             </View>
                         </View>
 
-                        <View style={styles.moduleList}>
-                            {(item.modules || ['Introduction', 'Pratique']).slice(0, 2).map((mod: string, i: number) => (
-                                <View key={i} style={styles.moduleItem}>
-                                    <CheckCircle color="#10B981" size={14} />
-                                    <Text style={styles.moduleText}>{mod}</Text>
-                                </View>
-                            ))}
+
+                        <View style={styles.actionRow}>
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                onPress={() => handleCopy(item)}
+                            >
+                                <Copy color="#64748B" size={18} />
+                                <Text style={styles.actionIconText}>Copier</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.actionIconBtn}
+                                onPress={() => handleShare(item)}
+                            >
+                                <Share2 color="#64748B" size={18} />
+                                <Text style={styles.actionIconText}>Partager</Text>
+                            </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity
@@ -285,6 +315,24 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
+    },
+    actionRow: {
+        flexDirection: 'row',
+        padding: 15,
+        backgroundColor: '#F8FAFC',
+        borderTopWidth: 1,
+        borderTopColor: '#F4F4F5',
+        gap: 20,
+    },
+    actionIconBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    actionIconText: {
+        fontSize: 13,
+        color: '#64748B',
+        fontWeight: '600',
     },
     loadingContainer: {
         padding: 40,

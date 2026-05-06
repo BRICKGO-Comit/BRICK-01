@@ -14,8 +14,10 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Send, User, Building, Phone, Mail, MessageSquare, Briefcase, MapPin } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { OfflineManager } from '../../lib/offline';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../lib/supabase';
-import { Loader2 } from 'lucide-react-native';
+import { Loader2, Camera, Search } from 'lucide-react-native';
 import * as Location from 'expo-location';
 
 // Move InputField OUTSIDE the component to prevent re-renders on every keystroke
@@ -54,8 +56,16 @@ export default function NewProspectScreen() {
 
     const [locationLink, setLocationLink] = useState<string | null>(null);
     const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error'>('loading');
+    const [isScanning, setIsScanning] = useState(false);
 
     useEffect(() => {
+        // Try sync on mount
+        OfflineManager.syncQueue().then(count => {
+            if (count > 0) {
+                console.log(`${count} prospects synchronisés au démarrage`);
+            }
+        });
+
         (async () => {
             try {
                 // Request permissions
@@ -81,6 +91,56 @@ export default function NewProspectScreen() {
 
     const [loading, setLoading] = useState(false);
 
+    const handleScan = async () => {
+        try {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission refusée', 'L\'accès à la caméra est nécessaire pour scanner.');
+                return;
+            }
+
+            const result = await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                quality: 0.8,
+            });
+
+            if (!result.canceled) {
+                setIsScanning(true);
+
+                // Extraction "Générique" pour la démo gratuite
+                // Dans une version de production sans clé API, on pourrait utiliser 
+                // une bibliothèque comme 'react-native-text-detector' (nécessite une config native)
+                // ou un serveur de traitement gratuit.
+
+                setTimeout(() => {
+                    // Simulation d'une analyse de l'image réelle
+                    const mockData = {
+                        firstName: 'Prénom détecté',
+                        lastName: 'Nom détecté',
+                        company: 'Société détectée',
+                        email: 'email@detecte.ci',
+                        phone: '+225 00 00 00 00'
+                    };
+
+                    setFormData(prev => ({
+                        ...prev,
+                        ...mockData
+                    }));
+
+                    setIsScanning(false);
+                    Alert.alert(
+                        'Mode Démonstration',
+                        'Cet aperçu simule l\'extraction intelligente via IA (à venir). Dans la version finale, les vraies données de votre carte de visite seront lues automatiquement.',
+                        [{ text: 'Continuer' }]
+                    );
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Error scanning:', error);
+            Alert.alert('Erreur', 'Impossible de lancer le scanner.');
+        }
+    };
+
     const handleSubmit = async () => {
         if (!formData.firstName || !formData.lastName || !formData.phone) {
             Alert.alert('Champs manquants', 'Veuillez renseigner le Prénom, le Nom et le Téléphone.');
@@ -96,21 +156,37 @@ export default function NewProspectScreen() {
                 return;
             }
 
+            const prospectPayload = {
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                company: formData.company,
+                phone: formData.phone,
+                email: formData.email,
+                address: formData.address,
+                need: formData.need,
+                assigned_to: user.id,
+                status: 'new',
+                comments: formData.comment,
+                google_map_link: locationLink
+            };
+
+            // Check connectivity
+            const online = await OfflineManager.isOnline();
+
+            if (!online) {
+                await OfflineManager.saveToQueue(prospectPayload);
+                setLoading(false);
+                Alert.alert(
+                    'Mode Hors-ligne',
+                    'Aucune connexion internet. Le prospect a été sauvegardé localement et sera synchronisé dès le retour du réseau.',
+                    [{ text: 'Compris', onPress: () => router.replace('/(tabs)') }]
+                );
+                return;
+            }
+
             const { error } = await supabase
                 .from('prospects')
-                .insert({
-                    first_name: formData.firstName,
-                    last_name: formData.lastName,
-                    company: formData.company,
-                    phone: formData.phone,
-                    email: formData.email,
-                    address: formData.address,
-                    need: formData.need,
-                    assigned_to: user.id,
-                    status: 'new',
-                    comments: formData.comment,
-                    google_map_link: locationLink // Add the link here
-                });
+                .insert(prospectPayload);
 
             if (error) throw error;
 
@@ -131,6 +207,7 @@ export default function NewProspectScreen() {
         }
     };
 
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -145,7 +222,17 @@ export default function NewProspectScreen() {
                 style={styles.keyboardView}
             >
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                    <Text style={styles.formTitle}>Informations du client</Text>
+                    <View style={styles.sectionHeaderRow}>
+                        <Text style={styles.formTitle}>Informations du client</Text>
+                        <TouchableOpacity
+                            style={styles.scanBtn}
+                            onPress={handleScan}
+                            disabled={isScanning}
+                        >
+                            <Camera color="#4F46E5" size={20} />
+                            <Text style={styles.scanBtnText}>{isScanning ? 'Scan...' : 'Scanner'}</Text>
+                        </TouchableOpacity>
+                    </View>
                     <View style={styles.locationContainer}>
                         {locationStatus === 'loading' && (
                             <View style={styles.locationBadgeLoading}>
@@ -315,11 +402,32 @@ const styles = StyleSheet.create({
         padding: 24,
         paddingBottom: 40,
     },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    scanBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EEF2FF',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E0E7FF',
+        gap: 8,
+    },
+    scanBtnText: {
+        color: '#4F46E5',
+        fontSize: 14,
+        fontWeight: '700',
+    },
     formTitle: {
         color: '#11181C',
         fontSize: 24,
         fontWeight: '800',
-        marginBottom: 8,
     },
     formSubtitle: {
         color: '#64748B',

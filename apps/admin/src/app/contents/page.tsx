@@ -218,7 +218,8 @@ export default function ContentsPage() {
                                 url: '',
                                 type: activeTab === 'Formations' ? 'formation' : 'video',
                                 description: '',
-                                thumbnail_url: ''
+                                thumbnail_url: '',
+                                department: 'all'
                             });
                             setIsVideoModalOpen(true);
                         }}

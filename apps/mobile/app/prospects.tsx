@@ -81,10 +81,20 @@ export default function ProspectsListScreen() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Get user's department to ensure strict partitioning
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+
             const { data, error } = await supabase
                 .from('prospects')
                 .select('*')
                 .eq('assigned_to', user.id)
+                .eq('department', userDept) // Strict department filtering
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

@@ -156,6 +156,14 @@ export default function NewProspectScreen() {
                 return;
             }
 
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+
             const prospectPayload = {
                 first_name: formData.firstName,
                 last_name: formData.lastName,
@@ -165,6 +173,7 @@ export default function NewProspectScreen() {
                 address: formData.address,
                 need: formData.need,
                 assigned_to: user.id,
+                department: userDept,
                 status: 'new',
                 comments: formData.comment,
                 google_map_link: locationLink

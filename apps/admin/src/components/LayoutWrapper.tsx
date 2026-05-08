@@ -10,6 +10,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     const pathname = usePathname();
     const isLoginPage = pathname === '/login';
     const { department, setDepartment } = useDepartment();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     if (isLoginPage) {
         return <>{children}</>;

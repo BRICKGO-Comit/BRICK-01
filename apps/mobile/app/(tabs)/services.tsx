@@ -55,14 +55,26 @@ export default function ServicesScreen() {
 
     const fetchServices = async () => {
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+
             const { data, error } = await supabase
                 .from('services')
                 .select('*')
+                .or(`department.eq.all,department.eq.${userDept}`)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
             setServices(data || []);
-            setFilteredServices(data || []); // Initialize filtered with all fetched data
+            setFilteredServices(data || []); 
         } catch (err) {
             console.error('Error fetching services:', err);
         } finally {

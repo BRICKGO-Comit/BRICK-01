@@ -21,6 +21,7 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [department, setDepartment] = useState('all');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -29,7 +30,8 @@ export default function UsersPage() {
         email: '',
         phone: '',
         password: '',
-        role: 'commercial'
+        role: 'commercial',
+        department: 'brick_core'
     });
 
     useEffect(() => {
@@ -47,17 +49,17 @@ export default function UsersPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [department]);
 
     const fetchUsers = async () => {
         // Don't set global loading to true on refresh to avoid flicker, only on initial load if needed
         // or use a separate refreshing state.
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .order('created_at', { ascending: false });
-
+            let query = supabase.from('profiles').select('*').order('created_at', { ascending: false });
+            if (department !== 'all') {
+                query = query.eq('department', department);
+            }
+            const { data, error } = await query;
             if (error) throw error;
             setUsers(data || []);
         } catch (err: any) {
@@ -104,7 +106,8 @@ export default function UsersPage() {
                 email: '',
                 phone: '',
                 password: '',
-                role: 'commercial'
+                role: 'commercial',
+                department: 'brick_core'
             });
             alert('Utilisateur créé avec succès !');
         } catch (err: any) {
@@ -128,13 +131,24 @@ export default function UsersPage() {
                     <h1 className="text-2xl lg:text-3xl font-black text-[#0F172A] tracking-tight">Commerciaux</h1>
                     <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez vos commerciaux et leurs accès.</p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
-                >
-                    <Plus size={20} />
-                    <span>Nouveau Commercial</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <select 
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="bg-white border border-[#E2E8F0] px-4 py-2.5 rounded-xl font-bold text-sm text-[#0F172A] shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"
+                    >
+                        <option value="all">Tous les départements</option>
+                        <option value="brick_core">Brick Core</option>
+                        <option value="brick_food">Brick Food 🍔</option>
+                    </select>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"
+                    >
+                        <Plus size={20} />
+                        <span>Nouveau Commercial</span>
+                    </button>
+                </div>
             </header>
 
             <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm relative min-h-[400px]">
@@ -156,9 +170,8 @@ export default function UsersPage() {
                         <thead className="text-[#64748B] text-xs font-bold uppercase tracking-wider bg-[#F8FAFC]">
                             <tr>
                                 <th className="px-6 py-4">Utilisateur</th>
-                                <th className="px-6 py-4">Rôle</th>
+                                <th className="px-6 py-4">Département</th>
                                 <th className="px-6 py-4">Contact</th>
-                                <th className="px-6 py-4">Statut</th>
                                 <th className="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
@@ -181,10 +194,10 @@ export default function UsersPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center space-x-1.5">
-                                            {user.role === 'admin' ? <Shield size={14} className="text-red-500" /> : <Users size={14} className="text-slate-400" />}
-                                            <span className="text-sm font-semibold text-[#475569] capitalize">{user.role}</span>
-                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wide ${user.department === 'brick_food' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
+                                            }`}>
+                                            {user.department === 'brick_food' ? 'BRICK FOOD' : 'BRICK CORE'}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="space-y-1">
@@ -201,10 +214,12 @@ export default function UsersPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-wide ${user.role !== 'blocked' ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'
-                                            }`}>
-                                            {user.role !== 'blocked' ? 'ACTIF' : 'BLOQUÉ'}
-                                        </span>
+                                        <div className="flex justify-end space-x-2">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-wide ${user.role !== 'blocked' ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'
+                                                }`}>
+                                                {user.role !== 'blocked' ? 'ACTIF' : 'BLOQUÉ'}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end space-x-2">
@@ -308,6 +323,19 @@ export default function UsersPage() {
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all"
                                     placeholder="Ex: 06 12 34 56 78"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-[#64748B] mb-2">Département</label>
+                                <select
+                                    name="department"
+                                    value={formData.department}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all"
+                                >
+                                    <option value="brick_core">Brick Core</option>
+                                    <option value="brick_food">Brick Food 🍔</option>
+                                </select>
                             </div>
 
                             <div>

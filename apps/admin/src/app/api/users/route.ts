@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, password, firstName, lastName, phone, role } = body;
+        const { email, password, firstName, lastName, phone, role, department } = body;
 
         // 1. Create user in Supabase Auth
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -21,7 +21,8 @@ export async function POST(request: Request) {
                 first_name: firstName,
                 last_name: lastName,
                 phone: phone,
-                role: role || 'commercial'
+                role: role || 'commercial',
+                department: department || 'brick_core'
             }
         });
 
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
                     last_name: lastName,
                     role: role || 'commercial',
                     phone: phone,
+                    department: department || 'brick_core',
                     updated_at: new Date().toISOString(),
                 });
 

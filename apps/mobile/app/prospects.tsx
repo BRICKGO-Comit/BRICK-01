@@ -23,7 +23,8 @@ import {
     ChevronRight,
     User,
     Filter,
-    Plus
+    Plus,
+    Utensils
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -112,19 +113,37 @@ export default function ProspectsListScreen() {
     };
 
     const getStatusColor = (status: string) => {
-        switch (status?.toLowerCase()) {
             case 'qualifié':
             case 'vendu':
             case 'success':
+            case 'demo_done':
+            case 'free_test_active':
                 return { bg: '#ECFDF5', text: '#10B981' };
-            case 'nouveau':
             case 'new':
+            case 'nouveau':
+            case 'waiting':
                 return { bg: '#EEF2FF', text: '#4F46E5' };
             case 'en cours':
             case 'pending':
+            case 'contacted':
                 return { bg: '#FEF3C7', text: '#F59E0B' };
+            case 'refused':
+            case 'lost':
+            case 'perdu':
+                return { bg: '#FEF2F2', text: '#EF4444' };
             default:
                 return { bg: '#F3F4F6', text: '#6B7280' };
+        }
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'demo_done': return 'Démo faite';
+            case 'free_test_active': return 'Test gratuit';
+            case 'new': return 'Nouveau';
+            case 'waiting': return 'En attente';
+            case 'contacted': return 'Contacté';
+            default: return status;
         }
     };
 
@@ -192,10 +211,17 @@ export default function ProspectsListScreen() {
                                     </View>
                                     <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
                                         <Text style={[styles.statusText, { color: colors.text }]}>
-                                            {item.status === 'new' ? 'Nouveau' : item.status}
+                                            {getStatusLabel(item.status)}
                                         </Text>
                                     </View>
                                 </View>
+
+                                {item.department === 'brick_food' && (
+                                    <View style={styles.foodBadge}>
+                                        <Utensils size={10} color="#4F46E5" />
+                                        <Text style={styles.foodBadgeText}>BRICK FOOD</Text>
+                                    </View>
+                                )}
 
                                 <View style={styles.cardBody}>
                                     {item.need ? (
@@ -353,6 +379,22 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 10,
         elevation: 2,
+    },
+    foodBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EEF2FF',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+        marginBottom: 12,
+        gap: 4,
+    },
+    foodBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: '#4F46E5',
     },
     cardHeader: {
         flexDirection: 'row',

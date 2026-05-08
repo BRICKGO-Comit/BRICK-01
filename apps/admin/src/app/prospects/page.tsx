@@ -108,14 +108,21 @@ export default function ProspectsPage() {
     };
 
     const getStatusColor = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'qualifié': return 'bg-green-100 text-green-700';
-            case 'new':
-            case 'nouveau': return 'bg-blue-100 text-blue-700';
-            case 'en cours': return 'bg-amber-100 text-amber-700';
-            case 'perdu': return 'bg-rose-100 text-rose-700';
-            default: return 'bg-slate-100 text-slate-700';
-        }
+        const s = status?.toLowerCase();
+        if (['qualifié', 'vendu', 'success', 'demo_done', 'free_test_active'].includes(s)) return 'bg-green-100 text-green-700';
+        if (['new', 'nouveau', 'waiting'].includes(s)) return 'bg-blue-100 text-blue-700';
+        if (['en cours', 'contacted'].includes(s)) return 'bg-amber-100 text-amber-700';
+        if (['perdu', 'lost', 'refused'].includes(s)) return 'bg-rose-100 text-rose-700';
+        return 'bg-slate-100 text-slate-700';
+    };
+
+    const getStatusLabel = (status: string) => {
+        const s = status?.toLowerCase();
+        if (s === 'demo_done') return 'Démo faite';
+        if (s === 'free_test_active') return 'Test gratuit';
+        if (s === 'new') return 'Nouveau';
+        if (s === 'waiting') return 'Attente';
+        return status;
     };
 
     return (
@@ -182,6 +189,7 @@ export default function ProspectsPage() {
                         <thead className="text-[#64748B] text-xs font-bold uppercase tracking-wider bg-[#F8FAFC]">
                             <tr>
                                 <th className="px-6 py-4">Prospect</th>
+                                <th className="px-6 py-4">Département</th>
                                 <th className="px-6 py-4">Localisation</th>
                                 <th className="px-6 py-4">Besoin</th>
                                 <th className="px-6 py-4">Statut</th>
@@ -206,6 +214,11 @@ export default function ProspectsPage() {
                                                 <div className="text-[11px] text-[#64748B] font-semibold">{prospect.company || 'Particulier'}</div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${prospect.department === 'brick_food' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                                            {prospect.department === 'brick_food' ? 'FOOD 🍔' : 'CORE 🏢'}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col space-y-1">
@@ -240,7 +253,7 @@ export default function ProspectsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusColor(prospect.status)}`}>
-                                            {prospect.status}
+                                            {getStatusLabel(prospect.status)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

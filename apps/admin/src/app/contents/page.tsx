@@ -34,8 +34,8 @@ export default function ContentsPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
 
     // Form States
-    const [serviceForm, setServiceForm] = useState({ title: '', price: '', category: 'Visibilité', description: '' });
-    const [videoForm, setVideoForm] = useState({ title: '', url: '', type: 'video', description: '', thumbnail_url: '' });
+    const [serviceForm, setServiceForm] = useState({ title: '', price: '', category: 'Visibilité', description: '', department: 'all' });
+    const [videoForm, setVideoForm] = useState({ title: '', url: '', type: 'video', description: '', thumbnail_url: '', department: 'all' });
     const [currency, setCurrency] = useState("FCFA"); // Default to FCFA
 
     useEffect(() => {
@@ -149,8 +149,8 @@ export default function ContentsPage() {
     };
 
     const resetForms = () => {
-        setServiceForm({ title: '', price: '', category: 'Visibilité', description: '' });
-        setVideoForm({ title: '', url: '', type: 'video', description: '', thumbnail_url: '' });
+        setServiceForm({ title: '', price: '', category: 'Visibilité', description: '', department: 'all' });
+        setVideoForm({ title: '', url: '', type: 'video', description: '', thumbnail_url: '', department: 'all' });
         setEditingId(null);
     };
 
@@ -160,7 +160,8 @@ export default function ContentsPage() {
             title: service.title,
             price: service.price,
             category: validCategories.includes(service.category) ? service.category : 'Visibilité',
-            description: service.description || ''
+            description: service.description || '',
+            department: service.department || 'all'
         });
         setEditingId(service.id);
         setIsServiceModalOpen(true);
@@ -172,7 +173,8 @@ export default function ContentsPage() {
             url: video.url,
             type: video.type,
             description: video.description || '',
-            thumbnail_url: video.thumbnail_url || ''
+            thumbnail_url: video.thumbnail_url || '',
+            department: video.department || 'all'
         });
         setEditingId(video.id);
         setIsVideoModalOpen(true);
@@ -286,7 +288,12 @@ export default function ContentsPage() {
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-[#0F172A]">{service.title}</h4>
-                                                    <p className="text-xs text-[#64748B] font-medium">{service.category}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xs text-[#64748B] font-medium">{service.category}</p>
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${service.department === 'brick_food' ? 'bg-amber-100 text-amber-700' : service.department === 'brick_core' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                            {service.department === 'brick_food' ? 'FOOD' : service.department === 'brick_core' ? 'CORE' : 'TOUS'}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center space-x-8">
@@ -344,6 +351,9 @@ export default function ContentsPage() {
                                                 <span className={`text-[10px] font-black tracking-widest uppercase ${vid.type === 'video' ? 'text-indigo-600' : 'text-emerald-600'}`}>
                                                     {vid.type === 'video' ? 'VIDÉO' : 'FORMATION'}
                                                 </span>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${vid.department === 'brick_food' ? 'bg-amber-100 text-amber-700' : vid.department === 'brick_core' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                    {vid.department === 'brick_food' ? 'FOOD' : vid.department === 'brick_core' ? 'CORE' : 'TOUS'}
+                                                </span>
                                             </div>
                                             <h5 className="font-bold text-sm text-[#0F172A] pr-6">{vid.title}</h5>
                                             {vid.description && (
@@ -397,8 +407,16 @@ export default function ContentsPage() {
                                 <input type="number" required value={serviceForm.price} onChange={e => setServiceForm({ ...serviceForm, price: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all" placeholder="Ex: 1500" />
                             </div>
                             <div>
+                                <label className="block text-sm font-bold text-[#64748B] mb-2">Département</label>
+                                <select value={serviceForm.department} onChange={e => setServiceForm({ ...serviceForm, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all bg-white">
+                                    <option value="all">Tous les départements</option>
+                                    <option value="brick_core">Brick Core uniquement</option>
+                                    <option value="brick_food">Brick Food uniquement</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-bold text-[#64748B] mb-2">Catégorie</label>
-                                <select value={serviceForm.category} onChange={e => setServiceForm({ ...serviceForm, category: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all">
+                                <select value={serviceForm.category} onChange={e => setServiceForm({ ...serviceForm, category: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all bg-white">
                                     <option value="Visibilité">Visibilité</option>
                                     <option value="Ventes">Ventes</option>
                                     <option value="Social">Social</option>
@@ -432,12 +450,22 @@ export default function ContentsPage() {
                                 <input type="text" required value={videoForm.title} onChange={e => setVideoForm({ ...videoForm, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all" placeholder={videoForm.type === 'formation' ? "Ex: Gestion Vente" : "Ex: Titre de la vidéo"} />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-[#64748B] mb-2">Type de contenu</label>
-                                <select value={videoForm.type} onChange={e => setVideoForm({ ...videoForm, type: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all bg-white">
-                                    <option value="video">Vidéo</option>
-                                    <option value="formation">Formation</option>
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-[#64748B] mb-2">Type</label>
+                                    <select value={videoForm.type} onChange={e => setVideoForm({ ...videoForm, type: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all bg-white">
+                                        <option value="video">Vidéo</option>
+                                        <option value="formation">Formation</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-[#64748B] mb-2">Département</label>
+                                    <select value={videoForm.department} onChange={e => setVideoForm({ ...videoForm, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 transition-all bg-white">
+                                        <option value="all">Tous</option>
+                                        <option value="brick_core">Core</option>
+                                        <option value="brick_food">Food</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div>

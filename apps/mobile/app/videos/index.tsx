@@ -80,10 +80,22 @@ export default function VideosScreen() {
 
     const fetchVideos = async () => {
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+
             const { data, error } = await supabase
                 .from('contents')
                 .select('*')
-                .eq('type', 'video');
+                .eq('type', 'video')
+                .or(`department.eq.all,department.eq.${userDept}`);
 
             if (error) throw error;
             setVideos(data || []);

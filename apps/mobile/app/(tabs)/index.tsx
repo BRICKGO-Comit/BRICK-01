@@ -117,13 +117,23 @@ export default function DashboardScreen() {
 
       if (error) throw error;
 
-      const salesCount = data?.filter((p: any) => p.status === 'converted' || p.status === 'Qualifié').length || 0;
-      const inscriptionCount = data?.filter((p: any) => p.status !== 'new' && p.status !== 'refused' && p.status !== 'lost').length || 0;
+      // Status logic for stats
+      // Core: 'converted' or 'Qualifié' count as sales
+      // Food: Anything beyond 'new', 'refused', or 'lost' count as inscriptions
+      const salesCount = data?.filter((p: any) => 
+        p.status === 'converted' || p.status === 'Qualifié' || p.status === 'won'
+      ).length || 0;
+      
+      const inscriptionCount = data?.filter((p: any) => 
+        !['new', 'refused', 'lost'].includes(p.status?.toLowerCase())
+      ).length || 0;
+
       const totalCommission = data?.reduce((acc: number, p: any) => acc + (p.commission_amount || 0), 0) || 0;
       
       // Objective logic
-      const target = profile?.monthly_inscriptions_goal || 10;
-      const objPercent = Math.min(Math.round((inscriptionCount / target) * 100), 100);
+      const target = isFood ? (profile?.monthly_inscriptions_goal || 25) : (profile?.monthly_prospects_goal || 50);
+      const currentProgress = isFood ? inscriptionCount : (count || 0);
+      const objPercent = Math.min(Math.round((currentProgress / target) * 100), 100);
 
       setStats({
         prospects: count || 0,

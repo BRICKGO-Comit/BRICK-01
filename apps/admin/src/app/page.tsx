@@ -76,9 +76,14 @@ export default function AdminDashboard() {
         recentQuery = recentQuery.eq('department', department);
       }
 
+      let profilesQuery = supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', 'blocked');
+      if (department !== 'all') {
+        profilesQuery = profilesQuery.eq('department', department);
+      }
+
       const [prospectsRes, profilesRes, recentRes] = await Promise.all([
         prospectsQuery,
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', 'blocked'),
+        profilesQuery,
         recentQuery
       ]);
 
@@ -87,7 +92,8 @@ export default function AdminDashboard() {
       const activeReps = profilesRes.count || 0;
 
       // Calculate Revenue / Commissions
-      const wonProspects = allProspects.filter(p => p.status === 'converted' || p.status === 'won' || p.status === 'gagné' || p.status === 'qualifié');
+      const wonStatuses = ['converted', 'won', 'gagné', 'qualifié', 'demo_done', 'free_test_active'];
+      const wonProspects = allProspects.filter(p => wonStatuses.includes(p.status?.toLowerCase()));
       const revenue = wonProspects.reduce((acc, curr) => acc + (curr.deal_value || 0), 0);
       const commissions = allProspects.reduce((acc, curr) => acc + (curr.commission_amount || 0), 0);
 
@@ -215,12 +221,16 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-6 py-4 text-[#475569] font-medium">{prospect.company || 'N/A'}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-wide ${prospect.status === 'Qualifié' ? 'bg-green-100 text-green-700' :
-                      (prospect.status === 'Nouveau' || prospect.status === 'new') ? 'bg-blue-100 text-blue-700' :
-                        prospect.status === 'En cours' ? 'bg-amber-100 text-amber-700' :
-                          'bg-rose-100 text-rose-700'
-                      }`}>
-                      {prospect.status}
+                    <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-wide ${
+                      ['qualifié', 'won', 'converted', 'demo_done', 'free_test_active'].includes(prospect.status?.toLowerCase()) ? 'bg-green-100 text-green-700' :
+                      ['nouveau', 'new', 'waiting'].includes(prospect.status?.toLowerCase()) ? 'bg-blue-100 text-blue-700' :
+                      ['en cours', 'contacted'].includes(prospect.status?.toLowerCase()) ? 'bg-amber-100 text-amber-700' :
+                      'bg-rose-100 text-rose-700'
+                    }`}>
+                      {prospect.status === 'new' ? 'Nouveau' : 
+                       prospect.status === 'demo_done' ? 'Démo Faite' :
+                       prospect.status === 'free_test_active' ? 'Test Actif' :
+                       prospect.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">

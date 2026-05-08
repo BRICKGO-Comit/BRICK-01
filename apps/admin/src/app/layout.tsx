@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { DepartmentProvider } from "@/context/DepartmentContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <LayoutWrapper>{children}</LayoutWrapper>
+        <DepartmentProvider>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </DepartmentProvider>
       </body>
     </html>
   );

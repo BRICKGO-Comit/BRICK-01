@@ -18,6 +18,7 @@ import {
     CheckCircle,
     Upload
 } from "lucide-react";
+import { useDepartment } from "@/context/DepartmentContext";
 
 export default function ContentsPage() {
     const [services, setServices] = useState<any[]>([]);
@@ -25,6 +26,7 @@ export default function ContentsPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState("Tous les contenus");
+    const { department } = useDepartment();
 
     // Modal States
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function ContentsPage() {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'contents' }, () => fetchData())
             .subscribe();
         return () => { supabase.removeChannel(channel) };
-    }, []);
+    }, [department]);
 
     const fetchCurrency = async () => {
         const { data } = await supabase.from('app_settings').select('currency_symbol').single();
@@ -55,9 +57,17 @@ export default function ContentsPage() {
 
     const fetchData = async () => {
         try {
+            let servicesQuery = supabase.from('services').select('*').order('created_at', { ascending: false });
+            let contentsQuery = supabase.from('contents').select('*').order('created_at', { ascending: false });
+
+            if (department !== 'all') {
+                servicesQuery = servicesQuery.eq('department', department);
+                contentsQuery = contentsQuery.eq('department', department);
+            }
+
             const [servicesRes, contentsRes] = await Promise.all([
-                supabase.from('services').select('*').order('created_at', { ascending: false }),
-                supabase.from('contents').select('*').order('created_at', { ascending: false })
+                servicesQuery,
+                contentsQuery
             ]);
 
             if (servicesRes.error) throw servicesRes.error;

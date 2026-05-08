@@ -15,13 +15,14 @@ import {
     X,
     CheckCircle
 } from "lucide-react";
+import { useDepartment } from "@/context/DepartmentContext";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [creating, setCreating] = useState(false);
-    const [department, setDepartment] = useState('all');
+    const { department } = useDepartment();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -132,15 +133,6 @@ export default function UsersPage() {
                     <p className="text-[#64748B] mt-1 text-sm font-medium">Gérez vos commerciaux et leurs accès.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
-                    <select 
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        className="bg-white border border-[#E2E8F0] px-4 py-2.5 rounded-xl font-bold text-sm text-[#0F172A] shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"
-                    >
-                        <option value="all">Tous les départements</option>
-                        <option value="brick_core">Brick Core</option>
-                        <option value="brick_food">Brick Food 🍔</option>
-                    </select>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-5 py-3 lg:px-6 lg:py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center space-x-2 transition-all active:scale-95 text-sm lg:text-base w-full sm:w-auto"

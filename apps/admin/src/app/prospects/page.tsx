@@ -16,8 +16,10 @@ import {
     Loader2,
     MapPin
 } from "lucide-react";
+import { useDepartment } from "@/context/DepartmentContext";
 
 export default function ProspectsPage() {
+    const { department } = useDepartment();
     const [prospects, setProspects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +40,7 @@ export default function ProspectsPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [statusFilter]);
+    }, [statusFilter, department]);
 
     const fetchProspects = async () => {
         setLoading(true);
@@ -47,6 +49,10 @@ export default function ProspectsPage() {
                 .from('prospects')
                 .select('*, assigned_profile:profiles(first_name, last_name)')
                 .order('created_at', { ascending: false });
+
+            if (department !== 'all') {
+                query = query.eq('department', department);
+            }
 
             if (statusFilter !== 'all') {
                 query = query.eq('status', statusFilter);

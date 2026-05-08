@@ -13,8 +13,10 @@ import {
     ArrowUpRight,
     Loader2
 } from "lucide-react";
+import { useDepartment } from "@/context/DepartmentContext";
 
 export default function StatisticsPage() {
+    const { department } = useDepartment();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalProspects: 0,
@@ -27,15 +29,17 @@ export default function StatisticsPage() {
 
     useEffect(() => {
         fetchStats();
-    }, []);
+    }, [department]);
 
     const fetchStats = async () => {
         setLoading(true);
         try {
             // 1. Fetch Prospects
-            const { data: prospects } = await supabase
-                .from('prospects')
-                .select('*');
+            let query = supabase.from('prospects').select('*');
+            if (department !== 'all') {
+                query = query.eq('department', department);
+            }
+            const { data: prospects } = await query;
 
             if (!prospects) return;
 
@@ -59,10 +63,16 @@ export default function StatisticsPage() {
             }
 
             // 3. Top Performers
-            const { data: performers } = await supabase
+            let perfQuery = supabase
                 .from('prospects')
-                .select('deal_value, status, profiles(first_name, last_name)')
+                .select('deal_value, status, profiles(first_name, last_name, department)')
                 .not('assigned_to', 'is', null);
+            
+            if (department !== 'all') {
+                perfQuery = perfQuery.eq('department', department);
+            }
+
+            const { data: performers } = await perfQuery;
 
             const perfMap: any = {};
             performers?.forEach((p: any) => {

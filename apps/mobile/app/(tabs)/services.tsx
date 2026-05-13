@@ -42,6 +42,12 @@ export default function ServicesScreen() {
     const [currency, setCurrency] = useState("FCFA");
 
     useEffect(() => {
+        if (searchParams.filter) {
+            setActiveFilter(searchParams.filter as string);
+        }
+    }, [searchParams.filter]);
+
+    useEffect(() => {
         fetchServices();
         fetchCurrency();
         const channel = supabase

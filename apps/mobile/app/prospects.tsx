@@ -157,6 +157,28 @@ export default function ProspectsListScreen() {
         }
     };
 
+    const handleAddNew = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+            if (userDept === 'brick_food') {
+                router.push('/prospect/food_new');
+            } else {
+                router.push('/prospect/new');
+            }
+        } catch (error) {
+            router.push('/prospect/new');
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
@@ -170,7 +192,7 @@ export default function ProspectsListScreen() {
                 </View>
                 <TouchableOpacity
                     style={styles.addBtn}
-                    onPress={() => router.push('/prospect/new')}
+                    onPress={handleAddNew}
                 >
                     <Plus color="#FFFFFF" size={24} />
                 </TouchableOpacity>

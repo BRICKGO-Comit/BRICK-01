@@ -28,10 +28,10 @@ export default function QuizScreen() {
     const [selected, setSelected] = useState<string | null>(null);
 
     const choices = [
-        { id: 'visibility', title: 'Plus de visibilité', icon: Eye, color: '#4F46E5' },
-        { id: 'sales', title: 'Vendre des produits', icon: ShoppingBag, color: '#10B981' },
+        { id: 'Visibilité', title: 'Plus de visibilité', icon: Eye, color: '#4F46E5' },
+        { id: 'Ventes', title: 'Vendre des produits', icon: ShoppingBag, color: '#10B981' },
         { id: 'video', title: 'Vidéo / publicité', icon: Video, color: '#F59E0B' },
-        { id: 'social', title: 'Réseaux sociaux', icon: Users, color: '#06B6D4' },
+        { id: 'Social', title: 'Réseaux sociaux', icon: Users, color: '#06B6D4' },
         { id: 'training', title: 'Formation', icon: GraduationCap, color: '#EC4899' },
     ];
 
@@ -39,10 +39,16 @@ export default function QuizScreen() {
         setSelected(id);
         // Simulating delay for effect before navigating
         setTimeout(() => {
-            router.push({
-                pathname: '/(tabs)/services',
-                params: { filter: id }
-            } as any);
+            if (id === 'video') {
+                router.push('/videos');
+            } else if (id === 'training') {
+                router.push('/formations');
+            } else {
+                router.push({
+                    pathname: '/(tabs)/services',
+                    params: { filter: id }
+                } as any);
+            }
         }, 400);
     };
 

@@ -13,14 +13,21 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.brickgo.app"
     },
     "android": {
       "package": "com.brickgo.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -51,14 +58,14 @@
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "gobrick123",
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "3634c514-d561-4d6e-bfce-41660b7f0709"
+        "projectId": "c011fe1b-1d4a-4104-8aea-26c00e64db5b"
       }
-    }
+    },
+    "owner": "marcel-app"
   }
 }

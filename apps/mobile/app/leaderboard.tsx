@@ -36,19 +36,32 @@ export default function LeaderboardScreen() {
 
     const fetchLeaderboard = async () => {
         try {
-            // Fetch all commercial profiles
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Get current agent's department
+            const { data: myProfile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = myProfile?.department || 'brick_core';
+
+            // Fetch all commercial profiles IN THE SAME DEPARTMENT
             const { data: profiles, error: pError } = await supabase
                 .from('profiles')
                 .select('id, full_name')
-                .eq('role', 'commercial');
+                .eq('role', 'commercial')
+                .eq('department', userDept);
 
             if (pError) throw pError;
 
-            // Fetch prospect counts (Warning: This is limited by RLS if not an admin)
-            // For the demo/gamification, we assume we can see the scores
+            // Fetch prospect counts IN THE SAME DEPARTMENT
             const { data: prospects, error: prError } = await supabase
                 .from('prospects')
-                .select('assigned_to, status');
+                .select('assigned_to, status')
+                .eq('department', userDept);
 
             if (prError) throw prError;
 
@@ -58,7 +71,9 @@ export default function LeaderboardScreen() {
                     id: profile.id,
                     full_name: profile.full_name || 'Agent Anonyme',
                     prospect_count: userProspects.length,
-                    converted_count: userProspects.filter(p => p.status === 'converted' || p.status === 'Qualifié').length
+                    converted_count: userProspects.filter(p => 
+                        ['converted', 'Qualifié', 'won', 'vendu', 'success'].includes(p.status)
+                    ).length
                 };
             });
 
@@ -68,14 +83,6 @@ export default function LeaderboardScreen() {
             setLeaderboard(scores);
         } catch (err) {
             console.error('Error fetching leaderboard:', err);
-            // Fallback mock data if RLS blocks
-            setLeaderboard([
-                { id: '1', full_name: 'Abdoulaye Diallo', prospect_count: 45, converted_count: 12 },
-                { id: '2', full_name: 'Moussa Koné', prospect_count: 38, converted_count: 9 },
-                { id: '3', full_name: 'Saliou Traoré', prospect_count: 30, converted_count: 8 },
-                { id: '4', full_name: 'Aminata Touré', prospect_count: 25, converted_count: 5 },
-                { id: '5', full_name: 'Bakary Sylla', prospect_count: 20, converted_count: 3 },
-            ]);
         } finally {
             setLoading(false);
         }

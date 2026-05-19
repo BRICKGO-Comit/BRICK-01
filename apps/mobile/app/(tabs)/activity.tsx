@@ -81,17 +81,32 @@ export default function ActivityScreen() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Get user's department to ensure strict partitioning
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('department')
+                .eq('id', user.id)
+                .single();
+            
+            const userDept = profile?.department || 'brick_core';
+
             const { data, error } = await supabase
                 .from('prospects')
                 .select('*')
                 .eq('assigned_to', user.id)
+                .eq('department', userDept) // Strict department filtering
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
             const total = data?.length || 0;
-            const qualified = data?.filter(p => p.status === 'Qualifié' || p.status === 'converted').length || 0;
-            const newOnes = data?.filter(p => p.status === 'Nouveau' || p.status === 'new').length || 0;
+            const qualified = data?.filter(p => 
+                ['qualifié', 'vendu', 'success', 'demo_done', 'Qualifié'].includes(p.status) || 
+                p.status === 'converted'
+            ).length || 0;
+            const newOnes = data?.filter(p => 
+                ['new', 'nouveau', 'Nouveau'].includes(p.status?.toLowerCase())
+            ).length || 0;
 
             setStats([
                 { label: 'Prospects', value: total.toString(), icon: Users, color: '#6366F1', trend: '+12%' },

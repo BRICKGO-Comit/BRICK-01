@@ -24,10 +24,23 @@ import {
     User,
     Filter,
     Plus,
-    Utensils
+    Utensils,
+    Download,
+    Share2,
+    Copy,
+    FileText,
+    X,
+    Clipboard as ClipboardIcon
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { 
+    filterProspectsByPeriod, 
+    exportToPDF, 
+    copyToClipboard, 
+    Period 
+} from '../lib/exportUtils';
+import { Modal, Pressable } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +51,8 @@ export default function ProspectsListScreen() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<string | null>(null);
+    const [exportModalVisible, setExportModalVisible] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         fetchProspects();
@@ -123,6 +138,7 @@ export default function ProspectsListScreen() {
     };
 
     const getStatusColor = (status: string) => {
+        switch (status?.toLowerCase()) {
             case 'qualifié':
             case 'vendu':
             case 'success':
@@ -155,6 +171,34 @@ export default function ProspectsListScreen() {
             case 'contacted': return 'Contacté';
             default: return status;
         }
+    };
+
+    const handleExport = async (period: Period) => {
+        setExporting(true);
+        try {
+            const periodProspects = filterProspectsByPeriod(prospects, period);
+            let title = "Rapport des Prospects";
+            
+            switch(period) {
+                case 'day': title = "Rapport Journalier - Prospects"; break;
+                case 'week': title = "Rapport Hebdomadaire - Prospects"; break;
+                case 'month': title = "Rapport Mensuel - Prospects"; break;
+                case 'quarter': title = "Rapport Trimestriel - Prospects"; break;
+            }
+
+            await exportToPDF(periodProspects, title);
+            setExportModalVisible(false);
+        } catch (error) {
+            Alert.alert("Erreur", "Impossible de générer le rapport.");
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const handleQuickCopy = async () => {
+        await copyToClipboard(filteredProspects);
+        Alert.alert("Succès", "Liste copiée dans le presse-papier.");
+        setExportModalVisible(false);
     };
 
     const handleAddNew = async () => {
@@ -190,6 +234,12 @@ export default function ProspectsListScreen() {
                     <Text style={styles.headerTitle}>Mes Prospects</Text>
                     <Text style={styles.headerSubtitle}>{prospects.length} total</Text>
                 </View>
+                <TouchableOpacity
+                    style={[styles.actionIconBtn, { marginRight: 12 }]}
+                    onPress={() => setExportModalVisible(true)}
+                >
+                    <Download color="#4F46E5" size={22} />
+                </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.addBtn}
                     onPress={handleAddNew}
@@ -310,6 +360,62 @@ export default function ProspectsListScreen() {
                     </TouchableOpacity>
                 </View>
             )}
+
+            {/* Export Modal */}
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={exportModalVisible}
+                onRequestClose={() => setExportModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Exporter / Rapports</Text>
+                            <TouchableOpacity onPress={() => setExportModalVisible(false)}>
+                                <X color="#64748B" size={24} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.modalSectionTitle}>Actions rapides</Text>
+                        <View style={styles.quickActions}>
+                            <TouchableOpacity style={styles.exportOption} onPress={handleQuickCopy}>
+                                <View style={[styles.optionIcon, { backgroundColor: '#EEF2FF' }]}>
+                                    <Copy color="#4F46E5" size={20} />
+                                </View>
+                                <Text style={styles.optionText}>Copier tout</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.modalSectionTitle}>Rapports PDF (Périodiques)</Text>
+                        <View style={styles.reportGrid}>
+                            <TouchableOpacity style={styles.reportItem} onPress={() => handleExport('day')}>
+                                <Calendar color="#4F46E5" size={20} />
+                                <Text style={styles.reportItemText}>Aujourd'hui</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.reportItem} onPress={() => handleExport('week')}>
+                                <FileText color="#4F46E5" size={20} />
+                                <Text style={styles.reportItemText}>Cette semaine</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.reportItem} onPress={() => handleExport('month')}>
+                                <FileText color="#4F46E5" size={20} />
+                                <Text style={styles.reportItemText}>Ce mois</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.reportItem} onPress={() => handleExport('quarter')}>
+                                <FileText color="#4F46E5" size={20} />
+                                <Text style={styles.reportItemText}>3 mois</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {exporting && (
+                            <View style={styles.exportingOverlay}>
+                                <ActivityIndicator color="#4F46E5" size="small" />
+                                <Text style={styles.exportingText}>Génération du rapport...</Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -563,5 +669,100 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '700',
+    },
+    actionIconBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#F1F5F9',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        padding: 24,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#0F172A',
+    },
+    modalSectionTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#64748B',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 16,
+        marginTop: 8,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        marginBottom: 24,
+    },
+    exportOption: {
+        alignItems: 'center',
+        marginRight: 24,
+    },
+    optionIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    optionText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#475569',
+    },
+    reportGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    reportItem: {
+        width: (width - 60) / 2,
+        backgroundColor: '#F8FAFC',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+        gap: 8,
+    },
+    reportItemText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1E293B',
+    },
+    exportingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+        zIndex: 10,
+    },
+    exportingText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#4F46E5',
     }
 });

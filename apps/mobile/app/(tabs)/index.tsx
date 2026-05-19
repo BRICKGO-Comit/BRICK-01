@@ -108,31 +108,31 @@ export default function DashboardScreen() {
         .eq('id', user.id)
         .single();
 
+      const userDept = profile?.department || 'brick_core';
       setUserData({ ...user, profile }); // Store profile in userData
 
       const { data, count, error } = await supabase
         .from('prospects')
         .select('*', { count: 'exact' })
-        .eq('assigned_to', user.id);
+        .eq('assigned_to', user.id)
+        .eq('department', userDept);
 
       if (error) throw error;
 
       // Status logic for stats
-      // Core: 'converted' or 'Qualifié' count as sales
-      // Food: Anything beyond 'new', 'refused', or 'lost' count as inscriptions
       const salesCount = data?.filter((p: any) => 
-        p.status === 'converted' || p.status === 'Qualifié' || p.status === 'won'
+        ['converted', 'Qualifié', 'won', 'vendu', 'success'].includes(p.status)
       ).length || 0;
       
       const inscriptionCount = data?.filter((p: any) => 
-        !['new', 'refused', 'lost'].includes(p.status?.toLowerCase())
+        !['new', 'nouveau', 'refused', 'lost'].includes(p.status?.toLowerCase())
       ).length || 0;
 
       const totalCommission = data?.reduce((acc: number, p: any) => acc + (p.commission_amount || 0), 0) || 0;
       
       // Objective logic
-      const target = isFood ? (profile?.monthly_inscriptions_goal || 25) : (profile?.monthly_prospects_goal || 50);
-      const currentProgress = isFood ? inscriptionCount : (count || 0);
+      const target = userDept === 'brick_food' ? (profile?.monthly_inscriptions_goal || 25) : (profile?.monthly_prospects_goal || 50);
+      const currentProgress = userDept === 'brick_food' ? inscriptionCount : (count || 0);
       const objPercent = Math.min(Math.round((currentProgress / target) * 100), 100);
 
       setStats({
